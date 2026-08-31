@@ -5,13 +5,23 @@ class FavoritPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    // TODO: Ganti dengan data diri kamu sendiri
+    const nama = 'Ardelia Anggun Saputri';
+    const email = 'ardeliaanggun4@email.com';
+    const noHp = '089523222026q';
+
+    return Center(
       child: Padding(
-        padding: EdgeInsets.all(24.0),
-        child: Text(
-          'Belum ada kontak favorit.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 16),
+        padding: const EdgeInsets.all(24.0),
+        child: Card(
+          child: ListTile(
+            leading: const CircleAvatar(
+              child: Icon(Icons.favorite),
+            ),
+            title: const Text(nama),
+            subtitle: Text('$email\n$noHp'),
+            isThreeLine: true,
+          ),
         ),
       ),
     );

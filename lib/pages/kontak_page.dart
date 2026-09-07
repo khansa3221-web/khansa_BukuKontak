@@ -1,4 +1,4 @@
-@'
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/kontak.dart';
@@ -109,4 +109,3 @@ class _KontakPageState extends State<KontakPage> {
     );
   }
 }
-'@ | Set-Content -Path "lib\pages\kontak_page.dart" -Encoding UTF8

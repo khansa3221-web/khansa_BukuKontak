@@ -1,3 +1,4 @@
+@'
 // Model data satu kontak: nama, email, no HP, kategori (opsional)
 class Kontak {
   final String nama;
@@ -12,3 +13,4 @@ class Kontak {
     this.kategori, // Opsional, tidak wajib diisi saat membuat objek Kontak
   });
 }
+'@ | Set-Content -Path "lib\models\kontak.dart" -Encoding UTF8

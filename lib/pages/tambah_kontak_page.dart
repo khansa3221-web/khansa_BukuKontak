@@ -1,3 +1,4 @@
+@'
 import 'package:flutter/material.dart';
 import '../models/kontak.dart';
 
@@ -9,10 +10,8 @@ class TambahKontakPage extends StatefulWidget {
 }
 
 class _TambahKontakPageState extends State<TambahKontakPage> {
-  // TUGAS 5: Form key untuk mengontrol validasi seluruh form
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  // Controller untuk masing-masing form input
   final TextEditingController namaController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController noHpController = TextEditingController();
@@ -28,9 +27,7 @@ class _TambahKontakPageState extends State<TambahKontakPage> {
   }
 
   void _simpanKontak() {
-    // TUGAS 5: validasi form terlebih dahulu sebelum menyimpan
     if (_formKey.currentState!.validate()) {
-      // TUGAS 4: kategori bersifat opsional, kirim null jika kosong
       final kategoriText = kategoriController.text.trim();
 
       final kontakBaru = Kontak(
@@ -40,7 +37,6 @@ class _TambahKontakPageState extends State<TambahKontakPage> {
         kategori: kategoriText.isEmpty ? null : kategoriText,
       );
 
-      // Kembali ke halaman Kontak sambil mengirim data kontak yang baru dibuat
       Navigator.pop(context, kontakBaru);
     }
   }
@@ -53,12 +49,10 @@ class _TambahKontakPageState extends State<TambahKontakPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        // TUGAS 5: bungkus seluruh isi halaman dengan widget Form
         child: Form(
           key: _formKey,
           child: Column(
             children: <Widget>[
-              // ---------- FORM INPUT ----------
               TextFormField(
                 controller: namaController,
                 decoration: const InputDecoration(
@@ -115,7 +109,6 @@ class _TambahKontakPageState extends State<TambahKontakPage> {
                 },
               ),
               const SizedBox(height: 12),
-              // TUGAS 4: input kategori, opsional (boleh dikosongkan) - tanpa validator
               TextFormField(
                 controller: kategoriController,
                 decoration: const InputDecoration(
@@ -143,3 +136,4 @@ class _TambahKontakPageState extends State<TambahKontakPage> {
     );
   }
 }
+'@ | Set-Content -Path "lib\pages\tambah_kontak_page.dart" -Encoding UTF8

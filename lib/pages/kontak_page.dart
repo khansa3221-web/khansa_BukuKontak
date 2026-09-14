@@ -1,85 +1,107 @@
-
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/kontak.dart';
 
-class KontakPage extends StatefulWidget {
+class KontakPage extends StatelessWidget {
   final List<Kontak> daftarKontak;
+  final TextEditingController searchController;
+  final ValueChanged<String> onSearchChanged;
+  final Stream<String> searchStream;
+  final ValueChanged<Kontak> onEdit;
+  final ValueChanged<Kontak> onDelete;
 
-  const KontakPage({super.key, required this.daftarKontak});
+  const KontakPage({
+    super.key,
+    required this.daftarKontak,
+    required this.searchController,
+    required this.onSearchChanged,
+    required this.searchStream,
+    required this.onEdit,
+    required this.onDelete,
+  });
 
-  @override
-  State<KontakPage> createState() => _KontakPageState();
-}
+  // Dialog konfirmasi sebelum menghapus kontak.
+  // Menerima objek `kontak` yang SAMA (referensi) dengan yang ditampilkan di
+  // daftar hasil pencarian, sehingga kontak yang dihapus selalu tepat sasaran
+  // walau daftar sedang dalam kondisi terfilter.
+  Future<void> _konfirmasiHapus(BuildContext context, Kontak kontak) async {
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Hapus Kontak'),
+          content: Text('Apakah kamu yakin ingin menghapus "${kontak.nama}" dari daftar kontak?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
 
-class _KontakPageState extends State<KontakPage> {
-  final StreamController<String> _searchController = StreamController<String>();
-  final TextEditingController _searchTextController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.close();
-    _searchTextController.dispose();
-    super.dispose();
-  }
-
-  List<Kontak> _filterKontak(String keyword) {
-    if (keyword.isEmpty) return widget.daftarKontak;
-    final lowerKeyword = keyword.toLowerCase();
-    return widget.daftarKontak.where((kontak) {
-      final namaMatch = kontak.nama.toLowerCase().contains(lowerKeyword);
-      final kategoriMatch =
-          (kontak.kategori ?? '').toLowerCase().contains(lowerKeyword);
-      return namaMatch || kategoriMatch;
-    }).toList();
+    if (konfirmasi == true) {
+      onDelete(kontak);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
+        // ---------- Pencarian Kontak Real-time ----------
         Padding(
           padding: const EdgeInsets.all(12.0),
           child: TextField(
-            controller: _searchTextController,
+            controller: searchController,
+            onChanged: onSearchChanged,
             decoration: const InputDecoration(
-              labelText: 'Cari nama atau kategori...',
+              labelText: 'Cari kontak (nama/kategori)',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),
-            onChanged: (teks) {
-              _searchController.add(teks);
-            },
           ),
         ),
         Expanded(
           child: StreamBuilder<String>(
-            stream: _searchController.stream,
+            stream: searchStream,
             initialData: '',
             builder: (context, snapshot) {
-              final keyword = snapshot.data ?? '';
-              final hasilPencarian = _filterKontak(keyword);
+              final kataKunci = (snapshot.data ?? '').toLowerCase();
 
-              if (widget.daftarKontak.isEmpty) {
-                return const Center(
+              final hasilFilter = kataKunci.isEmpty
+                  ? daftarKontak
+                  : daftarKontak.where((k) {
+                      final nama = k.nama.toLowerCase();
+                      final kategori = (k.kategori ?? '').toLowerCase();
+                      return nama.contains(kataKunci) ||
+                          kategori.contains(kataKunci);
+                    }).toList();
+
+              if (hasilFilter.isEmpty) {
+                return Center(
                   child: Text(
-                    'Belum ada kontak tersimpan.\nTekan tombol + untuk menambah kontak.',
+                    daftarKontak.isEmpty
+                        ? 'Belum ada kontak tersimpan.\nTekan tombol + untuk menambah kontak.'
+                        : 'Kontak tidak ditemukan.',
                     textAlign: TextAlign.center,
                   ),
                 );
               }
 
-              if (hasilPencarian.isEmpty) {
-                return const Center(
-                  child: Text('Kontak tidak ditemukan.'),
-                );
-              }
-
               return ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                itemCount: hasilPencarian.length,
+                padding: const EdgeInsets.all(12),
+                itemCount: hasilFilter.length,
                 itemBuilder: (context, index) {
-                  final kontak = hasilPencarian[index];
+                  // `kontak` adalah objek yang sama persis (reference) dengan
+                  // yang ada di daftarKontak utama, baik saat difilter maupun tidak.
+                  // Ini memastikan Edit/Delete selalu mengenai kontak yang benar.
+                  final kontak = hasilFilter[index];
                   return Card(
                     margin: const EdgeInsets.only(bottom: 8),
                     child: ListTile(
@@ -95,9 +117,24 @@ class _KontakPageState extends State<KontakPage> {
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       subtitle: Text(
-                        '${kontak.email}\n${kontak.noHp}\nKategori: ${kontak.kategori ?? 'Tanpa kategori'}',
+                        '${kontak.email}\n${kontak.noHp}\n${kontak.kategori ?? 'Tanpa kategori'}',
                       ),
                       isThreeLine: true,
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.blue),
+                            tooltip: 'Edit',
+                            onPressed: () => onEdit(kontak),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            tooltip: 'Hapus',
+                            onPressed: () => _konfirmasiHapus(context, kontak),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },
